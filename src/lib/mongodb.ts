@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI_MONGODB_URI = process.env.MONGODB_URI_MONGODB_URI;
 
 type MongooseCache = {
   conn: typeof mongoose | null;
@@ -19,14 +19,14 @@ global._mongooseCache = cache;
 export async function connectToDatabase() {
   if (cache.conn) return cache.conn;
 
-  if (!MONGODB_URI) {
+  if (!MONGODB_URI_MONGODB_URI) {
     throw new Error(
-      "MONGODB_URI is not set. Add it to admin-panel/.env.local — see .env.local.example."
+      "MONGODB_URI_MONGODB_URI is not set. Add it to admin-panel/.env.local — see .env.local.example."
     );
   }
 
   if (!cache.promise) {
-    cache.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+    cache.promise = mongoose.connect(MONGODB_URI_MONGODB_URI, { bufferCommands: false });
   }
 
   cache.conn = await cache.promise;
