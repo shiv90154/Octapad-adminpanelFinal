@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Octapad Admin Panel
 
-## Getting Started
+Simple admin dashboard for the Octapad app's activation-code system:
+generate/deactivate license codes, see which device each is locked to, and
+see the name + phone number the app reports on first launch.
 
-First, run the development server:
+Login is a single shared password (no OTP) — set it in `.env.local`.
+
+## 1. Get a free MongoDB database (one-time, ~5 minutes)
+
+1. Go to https://www.mongodb.com/cloud/atlas/register and create a free account.
+2. Create a free **M0** cluster (any region close to you).
+3. Under **Database Access**, add a database user with a username + password.
+4. Under **Network Access**, add `0.0.0.0/0` (allow access from anywhere) —
+   needed so the Android app can reach it later, not just your laptop.
+5. Click **Connect → Drivers**, copy the connection string. It looks like:
+   `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority`
+6. Add `/octapad` before the `?` so it points at a database named `octapad`:
+   `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/octapad?retryWrites=true&w=majority`
+
+## 2. Configure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Edit `.env.local`:
+- `MONGODB_URI` — the connection string from step 1.
+- `ADMIN_PASSWORD` — whatever password you want to log into the dashboard with.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 3. Run it
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open http://localhost:3000 — it'll redirect you to `/login`. Enter the
+password from `.env.local`.
 
-To learn more about Next.js, take a look at the following resources:
+## What's in the dashboard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Licenses tab** — generate one or many activation codes (shown as
+  `AB3D-9KXQ-7M2P`), see which device each one is bound to (a code locks to
+  the first device that redeems it), toggle **Active** off to remotely
+  deactivate a device, toggle **MIDI** to grant/revoke the paid MIDI feature,
+  unbind a code so it can be redeemed on a different phone, or delete a code.
+- **Signups tab** — every device that has ever opened the app, with the name
+  and phone number it reported (once the Android app is wired up to call
+  `/api/app/signup` — see below).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API the Android app will call (already built, not wired into the app yet)
 
-## Deploy on Vercel
+These are NOT behind the admin password — they're the endpoints the phone
+itself calls:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `POST /api/app/signup` — `{ deviceId, name, phone }` → recorded automatically
+  on first app launch, shows up in the Signups tab.
+- `POST /api/app/redeem` — `{ code, deviceId }` → validates an activation
+  code and locks it to that device (fails if already used on another device,
+  or deactivated).
+- `GET /api/app/status?code=...&deviceId=...` — periodic re-check so a
+  remote deactivation from the dashboard actually locks the app on next
+  check-in, without the user having to do anything.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To finish the loop, the Android app needs a small activation-gate screen
+that calls these two endpoints — say the word and I'll build that next,
+once you've deployed this somewhere the phone can reach (Vercel is the
+easiest option — free tier, `vercel deploy` once you're happy with this
+locally).
+
+## Deploying later (optional, once you're happy running it locally)
+
+Easiest path is Vercel (same people who make Next.js):
+
+```bash
+npx vercel
+```
+
+It'll ask you to log in / create a free account, then deploy. Add
+`MONGODB_URI` and `ADMIN_PASSWORD` as environment variables in the Vercel
+project settings (same values as your `.env.local`).
