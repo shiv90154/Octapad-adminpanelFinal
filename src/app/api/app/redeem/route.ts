@@ -16,24 +16,39 @@ export async function POST(req: NextRequest) {
   }
 
   await connectToDatabase();
-  const license = await License.findOne({ code });
+
+  // Atomic claim: only one concurrent request can win the "first redeemer"
+  // slot for an unbound code — Mongo matches+updates a single document
+  // atomically, so two devices redeeming the same unbound code at once
+  // can't both pass a separate read-then-write check and clobber each other.
+  const now = new Date();
+  let license = await License.findOneAndUpdate(
+    { code, active: true, deviceId: null },
+    { $set: { deviceId, redeemedAt: now, lastCheckInAt: now } },
+    { new: true }
+  );
 
   if (!license) {
-    return NextResponse.json({ ok: false, reason: "INVALID_CODE" }, { status: 404 });
-  }
-  if (!license.active) {
-    return NextResponse.json({ ok: false, reason: "DEACTIVATED" }, { status: 403 });
-  }
-  if (license.deviceId && license.deviceId !== deviceId) {
-    return NextResponse.json({ ok: false, reason: "ALREADY_USED" }, { status: 409 });
+    // Not a first-time claim — either already bound to this same device
+    // (re-redeem, fine) or the code doesn't exist / is inactive / is
+    // bound to someone else (all handled by the read-only check below).
+    license = await License.findOneAndUpdate(
+      { code, active: true, deviceId },
+      { $set: { lastCheckInAt: now } },
+      { new: true }
+    );
   }
 
-  if (!license.deviceId) {
-    license.deviceId = deviceId;
-    license.redeemedAt = new Date();
+  if (!license) {
+    const existing = await License.findOne({ code });
+    if (!existing) {
+      return NextResponse.json({ ok: false, reason: "INVALID_CODE" }, { status: 404 });
+    }
+    if (!existing.active) {
+      return NextResponse.json({ ok: false, reason: "DEACTIVATED" }, { status: 403 });
+    }
+    return NextResponse.json({ ok: false, reason: "ALREADY_USED" }, { status: 409 });
   }
-  license.lastCheckInAt = new Date();
-  await license.save();
 
   return NextResponse.json({
     ok: true,
