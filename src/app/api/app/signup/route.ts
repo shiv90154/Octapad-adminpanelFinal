@@ -14,6 +14,11 @@ export async function POST(req: NextRequest) {
   if (!deviceId) {
     return NextResponse.json({ error: "deviceId required" }, { status: 400 });
   }
+  // Defense-in-depth: the app already blocks activation on an empty phone
+  // client-side (ActivationScreen.kt), reject it here too.
+  if (!phone) {
+    return NextResponse.json({ error: "phone required" }, { status: 400 });
+  }
 
   await connectToDatabase();
   await Signup.findOneAndUpdate(

@@ -12,7 +12,10 @@ export interface ISignup {
 const SignupSchema = new Schema<ISignup>({
   deviceId: { type: String, required: true, unique: true, index: true },
   name: { type: String, default: "" },
-  phone: { type: String, default: "" },
+  // Phone is now required — the app blocks activation until one is
+  // entered (see ActivationScreen.kt), and the signup route rejects an
+  // empty one server-side as well.
+  phone: { type: String, required: true },
   installedAt: { type: Date, default: Date.now },
 });
 
