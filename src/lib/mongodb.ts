@@ -29,6 +29,21 @@ export async function connectToDatabase() {
     cache.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
   }
 
-  cache.conn = await cache.promise;
+  // BUG FIX: if mongoose.connect() ever rejects (Atlas hiccup, IP-allowlist
+  // blip, DNS timeout, credential rotation), cache.promise was left holding
+  // the rejected promise forever. Every subsequent call to any /api/* route
+  // — including the public /api/app/* endpoints the Android app depends on
+  // — re-awaited that same already-rejected promise and failed immediately,
+  // with no retry, until the whole Node process restarted. On serverless
+  // (Vercel) the module scope persists across invocations, so this could
+  // wedge every route until a redeploy. Reset cache.promise on failure so
+  // the next call gets a fresh connection attempt instead of replaying a
+  // dead one.
+  try {
+    cache.conn = await cache.promise;
+  } catch (err) {
+    cache.promise = null;
+    throw err;
+  }
   return cache.conn;
 }
