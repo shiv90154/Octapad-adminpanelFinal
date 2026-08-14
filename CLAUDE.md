@@ -14,7 +14,7 @@ npm run start    # run a production build locally
 npm run lint     # eslint
 ```
 
-Needs `.env.local` (copy from `.env.local.example`): `MONGODB_URI` (a real MongoDB Atlas connection string — the app will 500 on every `/api/*` route without one) and `ADMIN_PASSWORD`.
+Needs `.env.local` (copy from `.env.local.example`): `MONGODB_URI_MONGODB_URI` (a real MongoDB Atlas connection string — the app will 500 on every `/api/*` route without one) and `ADMIN_PASSWORD`.
 
 No test suite exists. `npm run build` is the practical verification step — it catches TypeScript errors and most routing mistakes.
 
