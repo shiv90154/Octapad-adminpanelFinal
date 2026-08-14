@@ -25,7 +25,7 @@ cp .env.local.example .env.local
 ```
 
 Edit `.env.local`:
-- `MONGODB_URI` — the connection string from step 1.
+- `MONGODB_URI_MONGODB_URI` — the connection string from step 1.
 - `ADMIN_PASSWORD` — whatever password you want to log into the dashboard with.
 
 ## 3. Run it
@@ -78,5 +78,5 @@ npx vercel
 ```
 
 It'll ask you to log in / create a free account, then deploy. Add
-`MONGODB_URI` and `ADMIN_PASSWORD` as environment variables in the Vercel
+`MONGODB_URI_MONGODB_URI` and `ADMIN_PASSWORD` as environment variables in the Vercel
 project settings (same values as your `.env.local`).
