@@ -207,7 +207,12 @@ export default function DashboardPage() {
                           onColor="bg-cyan-500"
                         />
                       </td>
-                      <td className="px-4 py-3 text-neutral-400 max-w-40 truncate">{l.note}</td>
+                      <td className="px-4 py-3">
+                        <NoteCell
+                          value={l.note}
+                          onSave={(v) => patchLicense(l.code, { note: v })}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-neutral-500 text-xs">
                         {l.lastCheckInAt ? new Date(l.lastCheckInAt).toLocaleString() : "never"}
                       </td>
@@ -300,6 +305,55 @@ function TabButton({
     >
       {children}
     </button>
+  );
+}
+
+function NoteCell({
+  value,
+  onSave,
+}: {
+  value: string;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [value, editing]);
+
+  function commit() {
+    setEditing(false);
+    if (draft !== value) onSave(draft);
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="max-w-40 truncate text-left text-neutral-400 hover:text-white block w-full"
+        title={value || "Click to add a note"}
+      >
+        {value || <span className="text-neutral-600">—</span>}
+      </button>
+    );
+  }
+
+  return (
+    <input
+      autoFocus
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") {
+          setDraft(value);
+          setEditing(false);
+        }
+      }}
+      className="w-full max-w-40 rounded-lg bg-neutral-800 border border-cyan-500 px-2 py-1 text-sm outline-none"
+    />
   );
 }
 
