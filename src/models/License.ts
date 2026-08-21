@@ -2,7 +2,7 @@ import mongoose, { Schema, models, model } from "mongoose";
 
 export interface ILicense {
   code: string;
-  deviceId: string | null; // null until first redeemed — one device only after that
+  deviceId: string | null; 
   active: boolean;
   midiPurchased: boolean;
   note: string;
