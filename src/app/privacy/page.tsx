@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const COMPANY = "Inphora Pvt Ltd";
 const DEVELOPER = "Shiv Kumar (Senior Developer)";
-const CONTACT_EMAIL = "inphora1@gmail.com";
+const CONTACT_EMAIL = "shiv@inphora.in";
 const LAST_UPDATED = "2 September 2026";
 
 export default function PrivacyPolicyPage() {
