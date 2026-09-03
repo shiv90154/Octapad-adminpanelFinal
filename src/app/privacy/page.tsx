@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const COMPANY = "Inphora Pvt Ltd";
-const DEVELOPER = "Inphora Devloper's";
+const DEVELOPER = "Inphora Developers";
 const CONTACT_EMAIL = "contact@inphora.in";
 const LAST_UPDATED = "2 September 2026";
 
